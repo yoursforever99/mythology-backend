@@ -22,6 +22,17 @@ db.connect(err => {
     }
 });
 
+const db = mysql.createPool({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT,
+  ssl: {
+    rejectUnauthorized: false // 开启云端 SSL 数据库连接
+  }
+});
+
 // 提供给前端拿数据的接口
 app.get('/api/mythology', (req, res) => {
     const sql = "SELECT id, title, content, category AS tags FROM japanese_mythology";
@@ -35,3 +46,4 @@ app.get('/api/mythology', (req, res) => {
 app.listen(3000, () => {
     console.log('后端服务已启动：http://localhost:3000/api/mythology');
 });
+
