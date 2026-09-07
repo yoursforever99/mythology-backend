@@ -1,27 +1,13 @@
+
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
-// 连接你本地的数据库
-const db = mysql.createConnection({
-    host: '127.0.0.1',
-    user: 'root',             // 你的数据库账号，默认通常是 root
-    password: '339912', // ⚠️ 这里一定要改成你平时连数据库用的密码！
-    database: 'japanese_mythology'
-});
-
-// 测试数据库能不能连通
-db.connect(err => {
-    if (err) {
-        console.error('数据库连接失败:', err.message);
-    } else {
-        console.log('数据库连接成功！');
-    }
-});
-
+// 1. 初始化数据库连接池（含云端 SSL 配置）
 const db = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -29,21 +15,24 @@ const db = mysql.createPool({
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
   ssl: {
-    rejectUnauthorized: false // 开启云端 SSL 数据库连接
+    rejectUnauthorized: false
   }
 });
 
-// 提供给前端拿数据的接口
+// 2. 接口定义
 app.get('/api/mythology', (req, res) => {
-    const sql = "SELECT id, title, content, category AS tags FROM japanese_mythology";
-    db.query(sql, (err, results) => {
-        if (err) return res.status(500).json(err);
-        res.json(results);
-    });
+  const sql = "SELECT id, title, content, category AS tags FROM japanese_mythology";
+  db.query(sql, (err, results) => {
+    if (err) {
+      console.error('数据库查询失败:', err);
+      return res.status(500).json(err);
+    }
+    res.json(results);
+  });
 });
 
-// 启动后端服务，监听 3000 端口
-app.listen(3000, () => {
-    console.log('后端服务已启动：http://localhost:3000/api/mythology');
+// 3. 启动端口监听
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`后端服务已启动，监听端口: ${PORT}`);
 });
-
